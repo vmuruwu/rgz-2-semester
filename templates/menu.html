@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block main %}
+<h1>Рады приветствовать вас в кинотеатре Киномания!</h1>
+<p><i>*Для бронирования Вам необходимо войти или зарегистрироваться</i></p>
+<div class="av_reg">
+    <a href="{{ url_for('register') }}" class="block">Зарегистрироваться</a>
+    <a href="{{ url_for('login') }}" class="block">Войти</a>
+</div>
+{% endblock %}

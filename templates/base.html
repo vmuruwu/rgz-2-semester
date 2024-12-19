@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='main.css')}}">
+    <title>Киномания</title>
+    {% block script %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div style="float: right;">
+            {% if session.get('login') %}
+                <span>Вы вошли как {{ session['login'] }}!</span>
+                <a href="{{ url_for('logout') }}" class="block">Выйти</a>
+                <a href="{{ url_for('delete_account') }}" class="block">Удалить аккаунт</a>
+            {% endif %}
+        </div>
+    </header>
+    <main>
+        {% block main %}
+        
+        {% endblock %}
+    </main>
+    <footer>
+        &copy; Втюрина Наталья, ФБИ-24, 3 курс, 2024
+    </footer>
+</body>
+</html>

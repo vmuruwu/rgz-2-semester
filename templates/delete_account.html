@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block main %}
+    <h1>Удаление аккаунта</h1>
+    <p><b>Вы уверены, что хотите удалить свой аккаунт?</b></p>
+    <p>Удаление аккаунта приведет к потере всех данных и доступа к сервисам.</p>
+    <p>Это действие необратимо, и восстановить аккаунт после удаления невозможно.
+        Пожалуйста, убедитесь, что вы действительно хотите продолжить.</p>
+    <h2>Подтвердите действие:</h2>
+    <form method="POST">
+        <label>
+            <input type="radio" name="confirm" value="yes"> Удалить аккаунт
+        </label>
+        <br>
+        <br>
+        <label>
+            <input type="radio" name="confirm" value="no" checked> Отмена
+        </label>
+        <br>
+        <br>
+        <button type="submit">Подтвердить</button>
+    </form>
+    <br>
+    <a href="{{ url_for('menu') }}">Вернуться на главную</a>
+{% endblock %}

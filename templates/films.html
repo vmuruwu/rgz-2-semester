@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block main %}
+<h1>Афиша</h1>
+
+{% if session.is_admin %}
+<a href="{{ url_for('add_film') }}" class="btn btn-primary">Добавить новый сеанс</a>
+{% endif %}
+
+<ul>
+    {% for film in films %}
+    <li>
+        <a href="{{ url_for('film_details', film_id=film['id']) }}">{{ film['film_name'] }}</a>
+        <p>Дата: {{ film['date'] }}</p>
+        <p>Время: {{ film['time'] }}</p>
+        {% if session.is_admin %}
+        <form action="{{ url_for('delete_film', film_id=film['id']) }}" method="POST" style="display:inline;">
+            <button type="submit" class="btn btn-danger">Удалить сеанс</button>
+        </form>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

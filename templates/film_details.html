@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+{% endblock %}
+
+{% block script %}
+    <script>
+        let bookedSeats = [];
+
+        const isAdmin = {{ session.is_admin|tojson }};
+
+        function getSeatList() {
+            const url = '/seats/json-rpc-api';
+            const json = {
+                'jsonrpc': '2.0',
+                'method': 'info',
+                'id': Math.round(Math.random() * 1000)
+            };
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.log('Данные от API:', data);
+                    const seatList = data.result;
+                    const container = document.getElementById('seat-container');
+                    if (!container) {
+                        console.error('Элемент seat-container не найден!');
+                        return;
+                    }
+                    container.innerHTML = '';
+
+                    for (let row = 0; row < 3; row++) {
+                        const rowDiv = document.createElement('div');
+                        rowDiv.className = 'seat-row';
+
+                        for (let col = 0; col < 10; col++) {
+                            const seatIndex = row * 10 + col;
+                            const seat = seatList[seatIndex];
+
+                            if (!seat) {
+                                console.warn(`Место с индексом ${seatIndex} отсутствует в данных`);
+                                continue;
+                            }
+
+                            const seatDiv = document.createElement('div');
+                            seatDiv.className = 'seat';
+                            seatDiv.classList.add(seat.user_id ? 'occupied' : 'free');
+
+                            const seatNumber = document.createElement('div');
+                            seatNumber.innerText = seat.number;
+                            seatNumber.style.fontWeight = 'bold';
+                            seatDiv.appendChild(seatNumber);
+
+                            if (seat.user_id) {
+                                const userInfo = document.createElement('div');
+                                userInfo.innerText = `Занято: ${seat.user_name || 'Неизвестный пользователь'}`;
+                                userInfo.style.fontSize = '12px';
+                                userInfo.style.display = 'none';
+                                seatDiv.appendChild(userInfo);
+
+                                seatDiv.onmouseover = function () {
+                                    userInfo.style.display = 'block';
+                                };
+                                seatDiv.onmouseout = function () {
+                                    userInfo.style.display = 'none';
+                                };
+
+                                const releaseButton = document.createElement('button');
+                                releaseButton.innerText = 'Снять бронь';
+                                releaseButton.onclick = function () {
+                                    cancelBooking(seat.number, isAdmin);
+                                };
+                                seatDiv.appendChild(releaseButton);
+                            }
+
+                            if (!seat.user_id) {
+                                const bookingButton = document.createElement('button');
+                                bookingButton.innerText = 'Бронь';
+                                bookingButton.onclick = function () { booking(seat.number) };
+                                seatDiv.appendChild(bookingButton);
+                            }
+
+                            rowDiv.appendChild(seatDiv);
+                        }
+
+                        container.appendChild(rowDiv);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Ошибка при загрузке данных:', error);
+                });
+        }
+
+        function booking(seatNumber) {
+            const url = '/seats/json-rpc-api';
+            const json = {
+                'jsonrpc': '2.0',
+                'params': seatNumber,
+                'method': 'booking',
+                'id': Math.round(Math.random() * 1000)
+            };
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.error) {
+                        const errorDiv = document.getElementById('error-message');
+                        switch (data.error.code) {
+                            case 1:
+                                errorDiv.innerText = 'Вы не авторизованы, пожалуйста, авторизуйтесь';
+                                break;
+                            case 2:
+                                errorDiv.innerText = 'Место занято';
+                                break;
+                            case -32601:
+                                errorDiv.innerText = 'Странная ошибка';
+                                break;
+                        }
+                        errorDiv.style.color = 'red';
+                    } else {
+                        bookedSeats.push(seatNumber);
+                        getSeatList();
+                        const errorDiv = document.getElementById('error-message');
+                        errorDiv.innerText = '';
+                    }
+                });
+        }
+
+        function cancelBooking(seatNumber, isAdmin) {
+            const url = '/seats/json-rpc-api';
+            const json = {
+                'jsonrpc': '2.0',
+                'params': seatNumber,
+                'method': 'cancellation',
+                'id': Math.round(Math.random() * 1000)
+            };
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.error) {
+                        const errorDiv = document.getElementById('error-message');
+                        errorDiv.innerText = data.error.message;
+                        errorDiv.style.color = 'red';
+                    } else {
+                        getSeatList();
+                    }
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            getSeatList();
+        });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <h1>{{ film['film_name'] }}</h1>
+    <h2>Дата: {{ film['date'] }}</h2>
+    <h2>Время: {{ film['time'] }}</h2>
+
+    <div id="error-message" style="color: red; margin-bottom: 20px;"></div>
+    <div id="seat-container"></div>
+{% endblock %}
